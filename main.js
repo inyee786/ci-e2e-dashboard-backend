@@ -3,11 +3,8 @@ var port = process.env.PORT || 3000;
 var express = require("express"); 
 var app = express();
 var cors = require('cors');
-var aws = require('./src/aws');
 var eks = require('./src/eks');
-var gcp = require('./src/gcp');
 var aks = require('./src/aks');
-var packet = require('./src/packet');
 var gke = require('./src/gke');
 var time = require('./src/time-calculate');
 var log_link = require('./src/kibana_log');
@@ -157,147 +154,6 @@ function main() {
         console.log("eks jobs error ->",err);
     });
 // ------------  AKS data End  ------------------------
-
-// ------------  Packet data Start  ------------------------
-    packet.packet_pipeline().then(function(data) {
-        if(temp != null) {
-            for(var j = 0; j < temp.length; j++) {
-                if (temp[j].jobs != undefined) {
-                    if(temp[j].jobs[1].status == "running" || temp[j].jobs[1].status == "pending" || temp[j].jobs[1].status == "created") {
-                        data.unshift(json)
-                    }
-                }
-            }
-        }
-        for (var i = 0; i < data.length; i++) {
-            var p_id = data[i].id;
-            data[i].cloud_id = 4;
-            var k = 0;
-            if (packet_job != "" && packet_job[k] != undefined) {
-                while(packet_job[k][0].pipeline.id !== p_id) {
-                    k++;
-                    if(packet_job[k] == undefined) {
-                        break;
-                    }
-                }
-                if(packet_job[k] != undefined && packet_job[k][0].pipeline.id == p_id) {
-                    data[i].jobs = packet_job[k];
-                    k = 0;
-                    data[i].log_link = log_link.kibana_log(data[i].sha, p_id, data[i]);
-                }
-            }
-        }
-        pipelines[3] = data;
-    }).catch(function (err) {
-        console.log("packet pipeline error ->",err);
-    }).then(function() {
-        var index = 0;
-        if (pipelines[3] != undefined) {
-            for(var p = 0; p < pipelines[3].length; p++) {
-                packet.packet_jobs(pipelines[3][p].id).then(function(data) {
-                    packet_job[index] = data;
-                    index++;
-                });
-            }
-        }
-    }).catch(function (err) {
-        console.log("packet jobs error ->",err);
-    });
-// ------------  Packet data End  ------------------------
-
-// ------------  GCP data Start  ------------------------
-    gcp.gcp_pipeline().then(function(data) {
-        if(temp != null) {
-            for(var j = 0; j < temp.length; j++) {
-                if (temp[j].jobs != undefined) {
-                    if(temp[j].jobs[1].status == "running" || temp[j].jobs[1].status == "pending" || temp[j].jobs[1].status == "created") {
-                        data.unshift(json)
-                    }
-                }
-            }
-        }
-        for (var j = 0; j < data.length; j++) {
-            var p_id = data[j].id;
-            data[j].cloud_id = 5;
-            var k = 0;
-            if (gcp_job != "" && gcp_job[k] != undefined) {
-                while(gcp_job[k][0].pipeline.id !== p_id) {
-                    k++;
-                    if(gcp_job[k] == undefined) {
-                        break;
-                    }
-                }
-                if(gcp_job[k] != undefined && gcp_job[k][0].pipeline.id == p_id) {
-                    data[j].jobs = gcp_job[k];
-                    k = 0;
-                    data[j].log_link = log_link.kibana_log(data[j].sha, p_id, data[j]);
-                }
-            }
-        }
-        pipelines[4] = data;
-    }).catch(function (err) {
-        console.log("gcp pipeline error ->",err);
-    }).then(function() {
-        var index = 0;
-        if (pipelines[4] != undefined) {
-            for(var p = 0; p < pipelines[4].length; p++) {
-                gcp.gcp_jobs(pipelines[4][p].id).then(function(data) {
-                    gcp_job[index] = data;
-                    index++;
-                });
-            }
-        }
-    }).catch(function (err) {
-        console.log("gcp jobs error ->",err);
-    });
-// ------------  GCP data End  ------------------------
-
-// ------------  AWS data Start  ------------------------
-    aws.aws_pipeline().then(function(data) {
-        if(temp != null) {
-            for(var j = 0; j < temp.length; j++) {
-                if (temp[j].jobs != undefined) {
-                    if(temp[j].jobs[1].status == "running" || temp[j].jobs[1].status == "pending" || temp[j].jobs[1].status == "created") {
-                        data.unshift(json)
-                    }
-                }
-            }
-        }
-        for (var i = 0; i < data.length; i++) {
-            var p_id = data[i].id;
-            data[i].cloud_id = 6;
-            var k = 0;
-            if (aws_job != "" && aws_job[k] != undefined) {
-                while(aws_job[k][0].pipeline.id !== p_id) {
-                    k++;
-                    if(aws_job[k] == undefined) {
-                        break;
-                    }
-                }
-                if(aws_job[k] != undefined && aws_job[k][0].pipeline.id == p_id) {
-                    data[i].jobs = aws_job[k];
-                    k = 0;
-                    data[i].log_link = log_link.kibana_log(data[i].sha, p_id, data[i]);
-                }
-            }
-        }
-        pipelines[5] = data;
-    }).catch(function (err) {
-        console.log("aws pipeline error ->",err);
-    }).then(function() {
-        var index = 0;
-        if (pipelines[5] != undefined) {
-            for(var p = 0; p < pipelines[5].length; p++) {
-                aws.aws_jobs(pipelines[5][p].id).then(function(data) {
-                    aws_job[index] = data;
-                    index++;
-                });
-            }
-        }
-    }).catch(function (err) {
-        console.log("aws jobs error ->",err);
-    });
-// ------------  AWS data End  ------------------------
 
 // ------------ build data ---------------------------
 
